@@ -1,0 +1,84 @@
+http://blog.leanote.com/post/quincyhuang/google-bbr
+
+最近总在折腾。之前在rectified买了一个年付9.6刀的128MB KVM架构的小VPS，其实它的线路本身就不错，直连国内电信和联通的洛杉矶鲨鱼机房，现在已经卖断货了。为了在这个小内存的VPS上搭建一个完美的梯子，我使用了使用Google BBR的全新内核。
+
+预备知识
+在使用Google BBR之前，我们首先要了解它是什么。了解计算机网络的人都知道，在TCP连接中，由于需要维持连接的可靠性，引入了拥塞控制和流量管理的方法。Google BBR就是谷歌公司提出的一个开源TCP拥塞控制的算法。在最新的linux 4.9及以上的内核版本中已被采用。对于该算法的分析，这里有一篇文章值得一读。在本人的网络环境（武汉电信20MB）测试下，ss不经过其它的任何的优化就能轻松的跑满带宽。（speedtest测试或fast测试）。由于Google BBR非常新，任何低于4.9的linux内核版本都需要升级到4.9及以上才能使用，故若VPS本身内核版本较低的话，只有KVM架构的VPS才能使用本教程升级内核并使用，openvz的VPS用户若内核版本较低则无法使用！
+
+实施过程
+基础方法
+最简单的方法就是使用Google BBR一键安装脚本。
+
+使用root用户登录，运行以下命令：
+
+wget --no-check-certificate https://github.com/teddysun/across/raw/master/bbr.sh
+chmod +x bbr.sh
+./bbr.sh
+安装完成后，脚本会提示需要重启 VPS，输入 y 并回车后重启。 
+重启完成后，进入 VPS，验证一下是否成功安装最新内核并开启 TCP BBR，输入以下命令：
+
+uname -r
+查看内核版本，含有 4.9 就表示 OK 了
+
+sysctl net.ipv4.tcp_available_congestion_control
+返回值一般为： 
+net.ipv4.tcp_available_congestion_control = bbr cubic reno
+
+sysctl net.ipv4.tcp_congestion_control
+返回值一般为： 
+net.ipv4.tcp_congestion_control = bbr
+
+sysctl net.core.default_qdisc
+返回值一般为： 
+net.core.default_qdisc = fq
+
+lsmod | grep bbr
+返回值有 tcp_bbr 模块即说明bbr已启动。
+
+进阶方法 推荐！
+由于一键包会进行很多很多判断和处理，而其中有很多步骤可以用更高的效率手工实现。
+
+升级内核
+
+对于Centos用户， 请执行如下命令：
+
+yum --enablerepo=elrepo-kernel -y install kernel-ml kernel-ml-devel
+对于Centos 6，执行：
+
+sed -i 's/^default=.*/default=0/g' /boot/grub/grub.conf
+对于Centos 7，执行：
+
+grub2-set-default 0
+而对于Debian / Ubuntu系统，可以在Ubuntu Kernel上下载最新版的内核deb安装包。
+
+对于64位系统，下载amd64的linux-image中含有generic的deb包，
+
+对于32位系统，下载i386的linux-image中含有generic的deb包。
+
+安装命令：
+
+dpkg -i xxxxxxxxxx.deb
+安装完后执行：
+
+/usr/sbin/update-grub
+升级完后请立即重启VPS reboot
+
+启用Google BBR
+
+写入配置文件
+
+echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
+echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
+保存配置文件
+
+sysctl -p
+输入以下命令以检查是否成功
+
+sysctl net.ipv4.tcp_available_congestion_control
+若返回
+
+net.ipv4.tcp_available_congestion_control = bbr cubic reno
+则说明开启成功。
+
+后记
+目前，常见的加速方式有Finalspeed（tcpspeed），Kcptun，锐速等单双边加速工具。Google BBR的优势就在于，其能单边地从TCP连接的拥塞控制算法着手解决网络加速的问题，并且已经集中到内核中成为新一代的规范，没有其他对于系统性能的开销。并且，可以配合锐速，Finalspeed等使用以达到最佳的使用效果。关于Finalspeed的使用教程可参见《网络环境的科学主义现代化改造》。
