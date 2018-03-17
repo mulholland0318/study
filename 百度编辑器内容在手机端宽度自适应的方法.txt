@@ -1,0 +1,5 @@
+百度编辑器呢会自动把添加的图片设置宽高属性，所以我们要把这两行代码干掉——找到js所在位置ueditor/ueditor/dialogs/image，找到image.js文件，打开编辑，第272行和279行分别设置了宽高属性，将其屏蔽即可style: "width:" + data['width'] + "px;height:" + data['height'] + "px;"
+然后在页面稍加限制
+<div class="test"> {$content} </div> <style> .test img{display:block;max-width:100%;height:auto;} </style>
+作者： 爱吃素的小筑 
+链接：http://www.imooc.com/article/13297

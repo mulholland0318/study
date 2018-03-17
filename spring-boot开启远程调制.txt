@@ -1,0 +1,27 @@
+2、运行fat jar（executable jar）
+java -jar target/xxxx.jar    注意，是在项目路径下执行。
+开启远程调试支持：
+java -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=8000,suspend=n -jar target/myproject-0.0.1-SNAPSHOT.jar
+
+如果你的IDE会随改随编译，你可能会倾向于只在特定时刻引发重启（否则会很烦人，而且性能下降）。这时，你可以使用“trigger file”，
+就是一个特定的文件，只有修改这个文件时才会触发重启。使用 spring.devtools.restart.trigger-file 属性即可
+
+
+自定义restart类加载器。
+如果有一个多模块项目，只有部分导入到你的IDE中，你可能需要自定义一下。首先创建一个文件：
+META-INF/spring-devtools.properties。该文件中，可以有以前缀 restart.exclude. 和 restart.include. 开头的属性。前者会被放入base类加载器，后者则被放入restart类加载器。
+该属性的value，是正则表达式。例如：
+restart.include.companycommonlibs=/mycorp-common-[\\w-]+\.jar
+restart.include.projectcommon=/mycorp-myproj-[\\w-]+\.jar
+
+3、热加载 LiveReload
+spring-boot-devtools 模块内置了一个 LiveReload Server，可以保证在改变资源时 浏览的刷新。LiveReload的浏览器扩展，免费支持Chrome、Firefox、Safari。
+如果想禁用：spring.devtools.livereload.enabled=false   
+
+4、全局设置（前面有提到）
+$HOME 文件夹下添加一个文件 .spring-boot-devtools.properties ，该文件中的内容会被作用于所有的Spring Boot项目。例如设置 触发文件：
+spring.devtools.reload.trigger-file=.reloadtrigger
+ 
+5、远程应用
+Spring Boot 的developer tools也可以在远程使用（应该是使用一部分）。需要开启支持。例如：
+spring.devtools.remote.secret=mysecret

@@ -1,0 +1,37 @@
+git clone只能clone远程库的master分支，无法clone所有分支，解决办法如下：
+
+git clone xxx.git "指定目录"
+
+1. 找一个干净目录，假设是git_work
+2. cd git_work
+3. git clone http://myrepo.xxx.com/project/.git ,这样在git_work目录下得到一个project子目录
+4. cd project
+5. git branch -a，列出所有分支名称如下：
+remotes/origin/dev
+remotes/origin/release
+6. git checkout -b dev origin/dev，作用是checkout远程的dev分支，在本地起名为dev分支，并切换到本地的dev分支
+7. git checkout -b release origin/release，作用参见上一步解释
+8. git checkout dev，切换回dev分支，并开始开发
+
+
+clone 某个分支：
+git clone -b b1 https://github.com/...
+
+clone所有分支
+git clone https://github.com/...
+git branch -r
+* master
+  origin/HEAD -> origin/master
+  origin/master
+  origin/b1
+git checkout b1
+
+git show-branch  查看分支信息
+
+git checkout -t origin/dev 该命令等同于：
+git checkout -b dev origin/dev
+
+git clone --depth 3 path 获取一定深度的项目
+git fetch --unshallow 更新项目把项目中整个提交历史全部更新到项目中
+
+git fetch origin +pu:pu maint:tmp
